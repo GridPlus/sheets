@@ -1,0 +1,28 @@
+{
+  "name": "sheets",
+  "version": "0.0.0",
+  "description": "convenience wrapper around google sheets api",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha -R spec --recursive"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GridPlus/sheets.git"
+  },
+  "author": "matt.walters@consensys.net",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GridPlus/sheets/issues"
+  },
+  "homepage": "https://github.com/GridPlus/sheets#readme",
+  "dependencies": {
+    "cconfig": "^1.2.4",
+    "debug": "^3.0.0",
+    "google-spreadsheet": "^2.0.4"
+  },
+  "devDependencies": {
+    "mocha": "^3.5.0",
+    "should": "^11.2.1"
+  }
+}

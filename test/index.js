@@ -4,10 +4,7 @@ require('should');
 
 describe('sheets', function () {
 
-  const sheets = new Sheets({
-    googleSheetId: '1Qa5U9ZHFZlAcZwdNno0ClAcYOS-h3dKSeSHuzzrb-jQ',
-    googleSheetName: 'automatedimportsheettest',
-  });
+  const sheets = new Sheets();
 
   describe('getCredentials', function () {
 
@@ -27,32 +24,45 @@ describe('sheets', function () {
 
   });
 
+});
+
+describe('sheet', function () {
+
   describe('createRow', function () {
     
     it('should create a new row for data provided', function (done) {
 
-      const updateddatetime = new Date();
+      const sheets = new Sheets();
+      const googleSheetId = '1Qa5U9ZHFZlAcZwdNno0ClAcYOS-h3dKSeSHuzzrb-jQ';
+      const googleSheetName = 'automatedimportsheettest';
 
-      const input = {
-        email: `test-user${Math.random().toString().substr(2, 10)}@unittest.org`, 
-        firstname: 'unit',
-        middlename: 'to-tha-mutha-truckin',
-        lastname: 'test',
-       updateddatetime 
+      sheets.getSheet(googleSheetId, (err, sheet) => {
+        if (err) return cb(err);
 
-      };
-
-      sheets.createRow(input, (err, result) => {
-        if (err) return done(err);
-
-        result.should.have.property('email', input.email);
-        result.should.have.property('firstname', input.firstname);
-        result.should.have.property('middlename', input.middlename);
-        result.should.have.property('lastname', input.lastname);
-        result.should.have.property('updateddatetime', input.updateddatetime.toString());
-
-        done();
-
+        const updateddatetime = new Date();
+  
+        const input = {
+          email: `test-user${Math.random().toString().substr(2, 10)}@unittest.org`, 
+          firstname: 'unit',
+          middlename: 'to-tha-mutha-truckin',
+          lastname: 'test',
+         updateddatetime 
+  
+        };
+  
+        sheet.createRow(googleSheetName, input, (err, result) => {
+          if (err) return done(err);
+  
+          result.should.have.property('email', input.email);
+          result.should.have.property('firstname', input.firstname);
+          result.should.have.property('middlename', input.middlename);
+          result.should.have.property('lastname', input.lastname);
+          result.should.have.property('updateddatetime', input.updateddatetime.toString());
+  
+          done();
+  
+        });
+        
       });
 
     });

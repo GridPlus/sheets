@@ -19,7 +19,8 @@
   "dependencies": {
     "cconfig": "^1.2.4",
     "debug": "^3.0.0",
-    "google-spreadsheet": "^2.0.4"
+    "google-spreadsheet": "^2.0.4",
+    "lodash.pick": "^4.4.0"
   },
   "devDependencies": {
     "mocha": "^3.5.0",

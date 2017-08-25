@@ -1,8 +1,11 @@
+const assign = require('lodash.assign');
+const async = require('async');
 const debug = require('debug')('gridplus:sheets');
 const GoogleSpreadsheet = require('google-spreadsheet');
 const fs = require('fs');
 const path = require('path');
 const pick = require('lodash.pick');
+const readableId = require('readable-id');
 
 class Sheets {
 
@@ -40,9 +43,9 @@ class Sheets {
       var doc = new GoogleSpreadsheet(googleSheetId);
 
       cb(null, new Sheet(doc, this));
-  
+
     });
-    
+
   }
 
 }
@@ -54,85 +57,134 @@ class Sheet {
     this.sheets = sheets;
   }
 
-  createRow (googleSheetName, data, cb) {
-    
+  authenticate (cb) {
+
     debug('getting google sheets credentials');
-    
+
     this.sheets.getCredentials((err, credentials) => {
       if (err) return cb(err);
-    
+
       debug('get service account auth token');
-    
+
       this.doc.useServiceAccountAuth(credentials, (err) => {
         if (err) return cb(err);
-    
-        debug('getting google sheet info');
-    
+
+        cb();
+
+      });
+
+    });
+
+  }
+
+  createRow (googleSheetName, data, cb) {
+
+    this.authenticate((err) => {
+      if (err) return cb(err);
+
+      debug('getting google sheet info');
+
         this.doc.getInfo((err, info) => {
           if (err) return cb(err);
-    
+
           const automatedimportsheet = info.worksheets.filter((sheet) => {
             return sheet.title === googleSheetName;
           })[0];
-    
-          automatedimportsheet.addRow(data, cb);        
-  
+
+          data.uniqueid = readableId();
+
+          automatedimportsheet.addRow(data, cb);
+
         });
-  
+
       });
-  
-    });
-  
+
   }
 
   getWorksheet (googleSheetName, cb) {
 
     debug('getting google sheets credentials');
-    
+
     this.sheets.getCredentials((err, credentials) => {
       if (err) return cb(err);
-    
+
       debug('get service account auth token');
-    
+
       this.doc.useServiceAccountAuth(credentials, (err) => {
         if (err) return cb(err);
-    
+
         debug('getting google sheet info');
-    
+
         this.doc.getInfo((err, info) => {
           if (err) return cb(err);
-    
+
           const worksheet = info.worksheets.filter((sheet) => {
             return sheet.title === googleSheetName;
           })[0];
-    
-          cb(null, new Worksheet(worksheet, this.sheets));
-  
+
+          return cb(null, new Worksheet(worksheet, this.sheets, this));
+
         });
-  
+
       });
-  
+
     });
   }
 
 }
 
 class Worksheet {
-  constructor (worksheet, sheets) {
+  constructor (worksheet, sheets, sheet) {
     this.worksheet = worksheet;
     this.sheets = sheets;
+    this.sheet = sheet;
   }
 
   getRows (columns, cb) {
-    if (typeof columns === 'function ') return this.worksheet.getRows(cb);
+    if (typeof columns === 'function') {
+      cb = columns;
+      columns = undefined;
+    }
+
+    this.sheet.authenticate((err) => {
+      if (err) return cb(err);
+
+      if (columns === undefined) return this.worksheet.getRows(cb);
+
+      debug(`getting rows for sheet`);
+
+      this.worksheet.getRows((err, googleRows) => {
+        if (err) return cb(err);
+        const rows = googleRows.map(gr => {
+          return pick(gr, columns.concat('id'));
+        });
+        cb(null, rows);
+      });
+
+    });
+
+  }
+
+  updateRows (query, update, cb) {
     this.worksheet.getRows((err, googleRows) => {
       if (err) return cb(err);
-      const rows = googleRows.map(gr => {
-        return pick(gr, columns);
+      // query
+      const rows = googleRows.filter(query);
+      // update
+      async.forEach(rows, (row, cb) => {
+        assign(row, update);
+        row.save(cb);
+      }, (err) => {
+        if (err) return cb(erR);
+        this.worksheet.getRows((err, googleRows) => {
+          if (err) return cb(err);
+          const rows = googleRows.filter(query);
+          cb(null, rows);
+        });
       });
-      cb(null, rows);
     });
   }
+
 }
 
 module.exports = Sheets;

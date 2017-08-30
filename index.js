@@ -1,11 +1,18 @@
 const assign = require('lodash.assign');
 const async = require('async');
+const crypto = require('crypto');
 const debug = require('debug')('gridplus:sheets');
 const GoogleSpreadsheet = require('google-spreadsheet');
 const fs = require('fs');
 const path = require('path');
 const pick = require('lodash.pick');
-const readableId = require('readable-id');
+const util = require('util');
+
+const uniqueid = function () {
+  return crypto
+    .createHmac('sha256', new Buffer(Math.random().toString()))
+    .digest('hex')
+};
 
 class Sheets {
 
@@ -91,7 +98,9 @@ class Sheet {
             return sheet.title === googleSheetName;
           })[0];
 
-          data.uniqueid = readableId();
+          data.uniqueid = uniqueid();
+
+          debug(`creating sheet row with values ${util.inspect(data)}`);
 
           automatedimportsheet.addRow(data, cb);
 
@@ -165,6 +174,22 @@ class Worksheet {
 
   }
 
+  getRows (query, cb) {
+    this.worksheet.getRows((err, googleRows) => {
+      if (err) return cb(err);
+
+      const rows = googleRows.filter(query);
+
+      this.worksheet.getRows((err, googleRows) => {
+        if (err) return cb(err);
+
+        const rows = googleRows.filter(query);
+
+        cb(null, rows);
+      });
+    });
+  }
+
   updateRows (query, update, cb) {
     this.worksheet.getRows((err, googleRows) => {
       if (err) return cb(err);
@@ -178,7 +203,9 @@ class Worksheet {
         if (err) return cb(erR);
         this.worksheet.getRows((err, googleRows) => {
           if (err) return cb(err);
+
           const rows = googleRows.filter(query);
+
           cb(null, rows);
         });
       });

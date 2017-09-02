@@ -1,6 +1,6 @@
 {
   "name": "sheets",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "convenience wrapper around google sheets api",
   "main": "index.js",
   "scripts": {

@@ -174,7 +174,7 @@ class Worksheet {
 
   }
 
-  getRows (query, cb) {
+  queryRows (query, cb) {
     this.worksheet.getRows((err, googleRows) => {
       if (err) return cb(err);
 

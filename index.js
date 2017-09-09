@@ -19,13 +19,17 @@ class Sheets {
   constructor (options) {
     options = options || {};
 
+    this.credentials = options.credentials;
+
     this.credentialFilePath = options.credentialFilePath || path.join(process.cwd(), '.credentials', 'service-account-creds.json');
 
   }
 
   getCredentials (cb) {
 
-    fs.readFile(this.credentialFilePath, (err, data) => {
+    if (this.credentials) return cb(null, this.credentials);
+
+    return fs.readFile(this.credentialFilePath, (err, data) => {
       if (err) return cb(err);
 
       var credentials = undefined;
@@ -38,6 +42,7 @@ class Sheets {
 
       return cb(null, credentials);
     });
+
   }
 
   getSheet (googleSheetId, cb) {
